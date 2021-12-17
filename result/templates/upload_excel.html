@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Excel</title>
+</head>
+<body>
+
+    <form action="{% url 'upload_data' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token  %}
+
+        <input type="text" name="name" placeholder="enter name of semester">
+        <input type="number" name="no_of_subject" placeholder="Enter the number of subjects">
+
+
+        <select name="branch">
+            {% for bran in branch %}
+            <option value="{{bran.id}}">{{bran.branches}} {{bran.id}}</option>
+            {% endfor %}
+        </select>
+        <select name="reg">
+            {% for re in reg %}
+            <option value="{{re.id}}">{{re.regulation}}</option>
+            {% endfor %}
+        </select>
+
+        <input type="file" name="file" >
+
+        <button type="submit">upload</button>
+    </form>
+</body>
+</html>
