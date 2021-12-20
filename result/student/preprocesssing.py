@@ -1,4 +1,6 @@
 import pandas as pd
+
+from student.models import Student, Subjects
 pd.options.mode.chained_assignment = None
 def get_subj_list(data,row_index):
     title = data.iloc[row_index]
@@ -28,3 +30,32 @@ def get_transformed_data(data):
             subj_data["Roll"] = roll
         subj_dict[list(subj_dict.keys())[i]] = subj_data
     return [subj_dict,roll]
+
+
+def describe_about_column(data):
+    data = pd.Series(data)
+    data_describe = dict(data.value_counts())
+    return data_describe
+
+def get_subject_analysis(sem,subj):
+    subject_data = Subjects.objects.all().filter(name=subj)
+    attnd = [data.cgpa for data in subject_data]
+    attnd_value_count = describe_about_column(attnd)
+    result = [data.result for data in subject_data]
+    result_value_count = describe_about_column(result)
+    num_of_failes = result_value_count['F']
+    grade = [data.grade for data in subject_data]
+    grade_value_count = describe_about_column(grade)
+    print(grade_value_count)
+    
+    
+
+
+
+
+
+
+
+
+
+

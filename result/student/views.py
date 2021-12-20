@@ -2,25 +2,29 @@ from django.shortcuts import render
 from numpy.core.function_base import add_newdoc
 from student.add_to_DB import split_data
 
-from student.preprocesssing import get_subj_list, get_transformed_data
-from .models import Branch, Regulation, Semester
+from student.preprocesssing import get_subj_list, get_subject_analysis, get_transformed_data
+from .models import Branch, Performance, Regulation, Semester, Student, Subjects
 import os
 import pandas as pd
 # Create your views here.
 
+
 def index(request):
-    print("hi")
-    if request.method == 'POST':
-        if "excel" in request.FILES:
-            user = request.FILES["excel"]
-            ex = Semester(file=user)
-            ex.save()
-            data = pd.read_excel(user)
-            title = get_subj_list(data,6)
-            di = get_transformed_data(data)
-            d1 = di[0][title[-1]]
-            print(d1[d1["Roll"] == "20135A0514"])
-            print(title[-1])
+    # print("hi")
+    # if request.method == 'POST':
+    #     if "excel" in request.FILES:
+    #         user = request.FILES["excel"]
+    #         ex = Semester(file=user)
+    #         ex.save()
+    #         data = pd.read_excel(user)
+    #         title = get_subj_list(data,6)
+    #         di = get_transformed_data(data)
+    #         d1 = di[0][title[-1]]
+    #         print(d1[d1["Roll"] == "20135A0514"])
+    #         print(title[-1])
+    sem = Semester.objects.get(name="III")
+    # subj = Subjects.objects.filter(name="DISCRETE MATHEMATICAL STRUCTURES")
+    get_subject_analysis(sem,"DISCRETE MATHEMATICAL STRUCTURES")
     return render(request,"base.html") 
 
 def upload(request):

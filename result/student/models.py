@@ -65,10 +65,10 @@ class Student(models.Model):
     def sems(self):
         sems = Semester.objects.all().filter(regulation=self.regulation)
         return sems
+    
+    
     class Meta:
         verbose_name_plural = "Students"
-    
-    
     
 
 class Subjects(models.Model):
@@ -86,13 +86,15 @@ class Subjects(models.Model):
     fail = models.BooleanField(default=False)
     # semester = models.ManyToManyField(Semester)
     def __str__(self):
-        return self.name
+        return f"{self.name} of  {self.roll.roll} during {self.sem.name} got cgpa of {self.cgpa}"
     
     class Meta:
         verbose_name_plural = "Subjects"
+        
     
 class Performance(models.Model):
     roll = models.ForeignKey(Student,on_delete=models.CASCADE)
+    regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE)
     sem = models.ForeignKey(Semester,on_delete=models.CASCADE)
     subject = models.ManyToManyField(Subjects)
     registered = models.IntegerField(blank=True)
@@ -102,6 +104,9 @@ class Performance(models.Model):
     SCGPA = models.FloatField(blank=True)
     
     def __str__(self):
-        return self.SCGPA
+        return f"{self.roll} got SCGPA of {self.SCGPA} for {self.sem.name} semester"
+    
+    
+    
     
     

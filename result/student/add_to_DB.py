@@ -1,6 +1,6 @@
 from pandas.core.indexing import convert_to_index_sliceable
 from student.preprocesssing import get_subj_list, get_transformed_data
-from .models import Semester, Subjects,Student,Regulation, Branch
+from .models import Performance, Semester, Subjects,Student,Regulation, Branch
 import pandas as pd
 
 def extract_name(subj_name):
@@ -21,7 +21,6 @@ def add_student(sem,roll):
                 student.sem.add(sem)
                 student.save() 
         else:
-            print("else")
             student = Student(roll=roll[i], regulation= sem.regulation, branch=sem.branch)
             student.save()
             student.sem.add(sem)
@@ -47,11 +46,39 @@ def add_subject(data,subj_name,code,sem,roll):
                         sem=sem,credit=credit_data,result=result_data[i],attendance=attendance_data[i],grade=grade_data[i],cgpa=cgpa_data)
         subj.save()
         
-        
-        
         # print(f"{roll[i]} for {subj_name} having Attendance of {attendance_data[i]} and result is {result_data[i]} \n credit is {credit_data[i]} grade is {grade_data[i]} cgpa is {cgpa_data[i]}")
     
         
+    
+def add_performance_sem(data,roll,sem):
+    data["Registered"] = list(map(int,data["Registered"]))
+    data["Pass"] = list(map(int,data["Pass"]))
+    data["TCR"] = list(map(float,data["TCR"]))
+    data["TCP"] = list(map(float,data["TCP"]))
+    data["SCGPA"] = list(map(float,data["SCGPA"]))
+    
+    
+    for i in range(len(data)):
+        registered_data = data["Registered"]
+        no_of_pass_data = data["Pass"]
+        TCR_data = data["TCR"]
+        TCP_data = data["TCP"]
+        scgpa = data["SCGPA"]
+        student_roll = Student.objects.get(roll=roll[i])
+        
+        perform = Performance(roll=student_roll, regulation=sem.regulation,sem=sem,
+                              registered=registered_data[i], no_of_pass=no_of_pass_data[i], TCR=TCR_data[i], TCP=TCP_data[i], SCGPA=scgpa[i])
+        perform.save()
+        
+        get_perform = Performance.objects.get(id=perform.id)
+        
+        subjs = Subjects.objects.all().filter(sem=sem,roll=student_roll)
+        for j in subjs:
+            sub = Subjects.objects.get(id=j.id)
+            get_perform.subject.add(sub)
+            get_perform.save()
+        
+
     
     
 def split_data(data,sem_id):
@@ -62,7 +89,7 @@ def split_data(data,sem_id):
     
     # compulsory add this line to add new students in the database
     add_student(sem,di[1])
-    d1 = di[0][title[-1]]
+    # d1 = di[0][title[-1]]
     for i in di[0].keys():
         code_and_subj = extract_name(i)
         if len(code_and_subj) > 1:
@@ -70,9 +97,10 @@ def split_data(data,sem_id):
             code = code_and_subj[0]
             data = di[0][i]
             add_subject(data,subj_name,code,sem,di[1])
+            
         else:
-            print("hllllllllooooo")
-            print(code_and_subj[0])
+            add_performance_sem(di[0][i],di[1],sem)
+            
     
     
     
