@@ -1,6 +1,7 @@
 from pandas.core.indexing import convert_to_index_sliceable
 from student.preprocesssing import get_subj_list, get_transformed_data
-from .models import Performance, Semester, Subjects,Student,Regulation, Branch
+from .models import BacklogSubject, Batch, Performance, Semester, Subjects,Student,Regulation, Branch
+from .back_log_handler import add_backlog
 import pandas as pd
 
 def extract_name(subj_name):
@@ -13,7 +14,7 @@ def extract_name(subj_name):
         return names
     
 def add_student(sem,roll):
-    # print(sem.name)
+    batch = Batch.objects.get(id=sem.batch.id)
     for i in range(len(roll)):
         if Student.objects.filter(roll=roll[i]).exists():
             student = Student.objects.get(roll=roll[i])
@@ -21,15 +22,17 @@ def add_student(sem,roll):
                 student.sem.add(sem)
                 student.save() 
         else:
-            student = Student(roll=roll[i], regulation= sem.regulation, branch=sem.branch)
+            student = Student(roll=roll[i], regulation= sem.regulation, branch=sem.branch,batch=batch)
             student.save()
             student.sem.add(sem)
             student.save()
     pass
 
 
+
 def add_subject(data,subj_name,code,sem,roll):
     credit = list(map(float,data["Credit"]))
+    batch = Batch.objects.get(id=sem.batch.id)
     # print(type(credit[1]))
     # print(credit[1])
     # print(type(credit))
@@ -42,10 +45,20 @@ def add_subject(data,subj_name,code,sem,roll):
         cgpa_data = cgpa[i]
         student_roll = Student.objects.get(roll=roll[i])
         
-        subj = Subjects(roll=student_roll,name=subj_name,code=code,branch=sem.branch, regulation=sem.regulation,
-                        sem=sem,credit=credit_data,result=result_data[i],attendance=attendance_data[i],grade=grade_data[i],cgpa=cgpa_data)
-        subj.save()
-        
+        if Subjects.objects.filter(code=code,roll=student_roll).exists():
+            pass
+        else:
+            subj = Subjects(roll=student_roll,name=subj_name,code=code,branch=sem.branch, regulation=sem.regulation,
+                            sem=sem,credit=credit_data,result=result_data[i],attendance=attendance_data[i],
+                            batch=batch,grade=grade_data[i],cgpa=cgpa_data)
+            subj.save()
+            
+            subj = Subjects.objects.get(id=subj.id)
+            if subj.result == "F":
+                subj.fail = True
+                subj.save()
+                add_backlog(subj,student_roll)
+            
         # print(f"{roll[i]} for {subj_name} having Attendance of {attendance_data[i]} and result is {result_data[i]} \n credit is {credit_data[i]} grade is {grade_data[i]} cgpa is {cgpa_data[i]}")
     
         
@@ -57,6 +70,7 @@ def add_performance_sem(data,roll,sem):
     data["TCP"] = list(map(float,data["TCP"]))
     data["SCGPA"] = list(map(float,data["SCGPA"]))
     
+    batch = Batch.objects.get(id=sem.batch.id)
     
     for i in range(len(data)):
         registered_data = data["Registered"]
@@ -65,9 +79,15 @@ def add_performance_sem(data,roll,sem):
         TCP_data = data["TCP"]
         scgpa = data["SCGPA"]
         student_roll = Student.objects.get(roll=roll[i])
-        
+        no_of_backlog = registered_data[i] - no_of_pass_data[i]
+        if no_of_backlog < 1:
+            pass_or_fail = True
+        else:
+            pass_or_fail = False
         perform = Performance(roll=student_roll, regulation=sem.regulation,sem=sem,
-                              registered=registered_data[i], no_of_pass=no_of_pass_data[i], TCR=TCR_data[i], TCP=TCP_data[i], SCGPA=scgpa[i])
+                              registered=registered_data[i], no_of_pass=no_of_pass_data[i], 
+                              no_of_backlog=no_of_backlog, pass_or_fail=pass_or_fail,
+                              TCR=TCR_data[i], TCP=TCP_data[i], SCGPA=scgpa[i], batch=batch)
         perform.save()
         
         get_perform = Performance.objects.get(id=perform.id)
@@ -87,6 +107,7 @@ def split_data(data,sem_id):
     title = get_subj_list(data,6)
     di = get_transformed_data(data)
     
+    
     # compulsory add this line to add new students in the database
     add_student(sem,di[1])
     # d1 = di[0][title[-1]]
@@ -100,6 +121,9 @@ def split_data(data,sem_id):
             
         else:
             add_performance_sem(di[0][i],di[1],sem)
+
+        
+            
             
     
     

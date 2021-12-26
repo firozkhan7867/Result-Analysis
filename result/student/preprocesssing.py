@@ -45,8 +45,8 @@ def get_subject_analysis(sem,subj):
     result_value_count = describe_about_column(result)
     num_of_failes = result_value_count['F']
     grade = [data.grade for data in subject_data]
-    grade_value_count = describe_about_column(grade)
-    print(grade_value_count)
+    grade_value_count = describe_about_column(
+        grade)
     
     
 

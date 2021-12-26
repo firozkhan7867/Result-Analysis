@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from numpy.core.function_base import add_newdoc
 from student.add_to_DB import split_data
+from student.back_log_handler import split_data_backlog
 
 from student.preprocesssing import get_subj_list, get_subject_analysis, get_transformed_data
-from .models import Branch, Performance, Regulation, Semester, Student, Subjects
+from .models import BacklogData, Batch, Branch, Performance, Regulation, Semester, Student, Subjects
 import os
 import pandas as pd
 # Create your views here.
@@ -22,22 +23,75 @@ def index(request):
     #         d1 = di[0][title[-1]]
     #         print(d1[d1["Roll"] == "20135A0514"])
     #         print(title[-1])
-    sem = Semester.objects.get(name="III")
-    # subj = Subjects.objects.filter(name="DISCRETE MATHEMATICAL STRUCTURES")
-    get_subject_analysis(sem,"DISCRETE MATHEMATICAL STRUCTURES")
+    # sem = Semester.objects.get(name="III")
+    # # subj = Subjects.objects.filter(name="DISCRETE MATHEMATICAL STRUCTURES")
+    # get_subject_analysis(sem,"DISCRETE MATHEMATICAL STRUCTURES")
     return render(request,"base.html") 
 
 def upload(request):
     sem = Semester.objects.all()
     reg = Regulation.objects.all()
     branch = Branch.objects.all()
+    batch = Batch.objects.all()
     context = {
         'sem':sem,
         'branch':branch,
         "reg":reg,
+        'batch':batch,
     }
     
     return render(request,"upload_excel.html",context)
+
+
+
+def backlogupload(request):
+    sem = Semester.objects.all()
+    reg = Regulation.objects.all()
+    branch = Branch.objects.all()
+    batch = Batch.objects.all()
+    context = {
+        'sem':sem,
+        'branch':branch,
+        "reg":reg,
+        'batch':batch
+    }
+    
+    return render(request,"back_log.html",context)
+
+def backlogdata(request):
+    if request.method == "POST":
+        reg = request.POST.get("reg")
+        branch = request.POST.get("branch")
+        batch = request.POST.get("batch")
+        sem = request.POST.get("sem")
+        bra = Branch.objects.get(id=branch)
+        reg = Regulation.objects.get(id=reg)
+        batch = Batch.objects.get(id=batch)
+        sem = Semester.objects.get(id=sem)
+        backdata = BacklogData(sem=sem,regulation=reg,branch=bra,batch=batch)
+        backdata.save()
+        # backdata = BacklogData.objects.get(id=backdata.id)
+        
+        if "file" in request.FILES:
+            data = request.FILES['file']
+            backdata.file = data
+            backdata.save()
+        backdata.save()
+        
+        split_data_backlog(data,sem.id)
+
+    sem = Semester.objects.all()
+    reg = Regulation.objects.all()
+    branch = Branch.objects.all()
+    batch = Batch.objects.all()
+    context = {
+        'sem':sem,
+        'branch':branch,
+        "reg":reg,
+        'batch':batch
+    }
+    
+    return render(request,"back_log.html",context)
 
 
 def data(request):
@@ -45,27 +99,35 @@ def data(request):
         reg = request.POST.get("reg")
         branch = request.POST.get("branch")
         name = request.POST.get("name")
+        # type = request.POST.get("type")
         no_of_subject = request.POST.get("no_of_subject")
+        batch = request.POST.get('batch')
         bra = Branch.objects.get(id=branch)
         reg = Regulation.objects.get(id=reg)
-        sem = Semester(name=name,branch=bra,no_of_subject=no_of_subject,regulation=reg)
-        sem.save()
-        # sem.regulation.add(reg)
-        
-        if "file" in request.FILES:
-            data = request.FILES['file']
-            sem.file = data
+        batch = Batch.objects.get(id=batch)
+        if Semester.objects.filter(branch=bra,batch=batch,regulation=reg,name=name).exists():
+            pass
+        else:
+            sem = Semester(name=name,branch=bra,no_of_subject=no_of_subject,regulation=reg,batch=batch)
             sem.save()
-        sem.save()
-        split_data(data,sem.id)
+            # sem.regulation.add(reg)
+            
+            if "file" in request.FILES:
+                data = request.FILES['file']
+                sem.file = data
+                sem.save()
+            sem.save()
+            split_data(data,sem.id)
         
     sem = Semester.objects.all()
     reg = Regulation.objects.all()
     branch = Branch.objects.all()
+    batch = Batch.objects.all()
     context = {
         'sem':sem,
         'branch':branch,
         "reg":reg,
+        "batch":batch
     }
     return render(request,"upload_excel.html",context)  
 

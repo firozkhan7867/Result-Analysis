@@ -15,14 +15,20 @@
         <input type="number" name="no_of_subject" placeholder="Enter the number of subjects">
 
 
+        
+        <select name="reg">
+            {% for re in reg %}
+            <option value="{{re.id}}">{{re.regulation}}</option>
+            {% endfor %}
+        </select>
         <select name="branch">
             {% for bran in branch %}
             <option value="{{bran.id}}">{{bran.branches}} {{bran.id}}</option>
             {% endfor %}
         </select>
-        <select name="reg">
-            {% for re in reg %}
-            <option value="{{re.id}}">{{re.regulation}}</option>
+        <select name="batch">
+            {% for btch in batch %}
+            <option value="{{btch.id}}">{{btch.name}}  </option>
             {% endfor %}
         </select>
 
@@ -32,3 +38,4 @@
     </form>
 </body>
 </html>
+
