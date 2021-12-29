@@ -1,7 +1,6 @@
-from pandas.core.indexing import convert_to_index_sliceable
+from .back_log_handler import add_backlog, add_student_performance
 from student.preprocesssing import get_subj_list, get_transformed_data
 from .models import BacklogSubject, Batch, Performance, Semester, Subjects,Student,Regulation, Branch
-from .back_log_handler import add_backlog
 import pandas as pd
 
 def extract_name(subj_name):
@@ -26,7 +25,6 @@ def add_student(sem,roll):
             student.save()
             student.sem.add(sem)
             student.save()
-    pass
 
 
 
@@ -44,8 +42,8 @@ def add_subject(data,subj_name,code,sem,roll):
         grade_data = data["Grade"]
         cgpa_data = cgpa[i]
         student_roll = Student.objects.get(roll=roll[i])
-        
-        if Subjects.objects.filter(code=code,roll=student_roll).exists():
+        # sem should be removed to maintain unique constraint
+        if Subjects.objects.filter(code=code,roll=student_roll,sem=sem).exists():
             pass
         else:
             subj = Subjects(roll=student_roll,name=subj_name,code=code,branch=sem.branch, regulation=sem.regulation,
@@ -62,7 +60,8 @@ def add_subject(data,subj_name,code,sem,roll):
         # print(f"{roll[i]} for {subj_name} having Attendance of {attendance_data[i]} and result is {result_data[i]} \n credit is {credit_data[i]} grade is {grade_data[i]} cgpa is {cgpa_data[i]}")
     
         
-    
+
+
 def add_performance_sem(data,roll,sem):
     data["Registered"] = list(map(int,data["Registered"]))
     data["Pass"] = list(map(int,data["Pass"]))
@@ -75,11 +74,16 @@ def add_performance_sem(data,roll,sem):
     for i in range(len(data)):
         registered_data = data["Registered"]
         no_of_pass_data = data["Pass"]
-        TCR_data = data["TCR"]
-        TCP_data = data["TCP"]
-        scgpa = data["SCGPA"]
+        # TCR_data = data["TCR"]
+        # TCP_data = data["TCP"]
+        # scgpa = data["SCGPA"]
+        per_data = add_student_performance(roll[i],sem)
+        TCR  = per_data[0]
+        TCP  = per_data[1]
+        SCGPA  = per_data[2]
         student_roll = Student.objects.get(roll=roll[i])
         no_of_backlog = registered_data[i] - no_of_pass_data[i]
+        
         if no_of_backlog < 1:
             pass_or_fail = True
         else:
@@ -87,8 +91,8 @@ def add_performance_sem(data,roll,sem):
         perform = Performance(roll=student_roll, regulation=sem.regulation,sem=sem,
                               registered=registered_data[i], no_of_pass=no_of_pass_data[i], 
                               no_of_backlog=no_of_backlog, pass_or_fail=pass_or_fail,
-                              TCR=TCR_data[i], TCP=TCP_data[i], SCGPA=scgpa[i], batch=batch)
-        perform.save()
+                              TCR=TCR, TCP=TCP, SCGPA=SCGPA, batch=batch)
+        perform.save()  
         
         get_perform = Performance.objects.get(id=perform.id)
         
@@ -106,6 +110,9 @@ def split_data(data,sem_id):
     data = pd.read_excel(data)
     title = get_subj_list(data,6)
     di = get_transformed_data(data)
+    sem.subject = ",".join(title[:-1])
+    sem.save()
+    
     
     
     # compulsory add this line to add new students in the database

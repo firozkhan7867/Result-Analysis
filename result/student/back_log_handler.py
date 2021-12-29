@@ -3,6 +3,34 @@ from student.models import Attempt, BacklogSubject, Batch, Semester, Student, Su
 from student.preprocesssing import get_subj_list, get_transformed_data
 
 
+
+
+def add_student_performance(roll,sem):
+    grade = {"O":10,"A+":9,"A":8,"B+":7,"B":6,"C":5,"F":0,"AB":0}
+    if Student.objects.filter(roll=roll).exists():
+        # print("exists user ", Student.objects.get(roll=roll))
+        student = Student.objects.get(roll=roll)
+        subj = Subjects.objects.all().filter(roll=student,sem=sem)
+        credit = [sub.credit for sub in subj]
+        grade_val = [sub.grade for sub in subj]
+        
+        
+        
+        CP = []
+        for i in range(len(credit)):
+            CP.append(credit[i]*grade[grade_val[i]])
+        TCR = sum(credit)
+        # for i in grade_val:
+        #     TCR += grade[i]
+        TCP = sum(CP)
+        
+        if sum(credit) > 0:
+            SCGPA = TCP/sum(credit)
+       
+        
+        return [TCR, TCP,SCGPA ]
+        
+
 def add_backlog(subj,student_roll):
     subj = Subjects.objects.get(id=subj.id)
     batch = Batch.objects.get(id=subj.batch.id)
@@ -17,13 +45,18 @@ def add_backlog(subj,student_roll):
         backlog.save()
 
 def update_performance(subj):
+    # print(subj.name,subj.sem.name, subj)
     perf = Performance.objects.get(sem=subj.sem,roll=subj.roll)
     perf.no_of_pass += 1
     perf.no_of_backlog -=1
+    data = add_student_performance(subj.roll.roll,subj.sem)
+    perf.TCR = data[0]
+    perf.TCP = data[1]
+    perf.SCGPA = data[2]
     perf.save()
 
 def update_subject(attmpt):
-    subj = Subjects.objects.get(id=attmpt.subj.id)
+    subj = Subjects.objects.get(id=attmpt.subj.id, sem=attmpt.sem)
     subj.fail = False
     subj.credit = attmpt.credit
     subj.result = attmpt.result

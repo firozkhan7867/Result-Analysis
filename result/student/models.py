@@ -55,7 +55,7 @@ class Semester(models.Model):
     regulation = models.ForeignKey(Regulation,on_delete=models.CASCADE)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
     batch = models.ForeignKey(Batch,on_delete=models.CASCADE)
-    # subject = models.ManyToManyField(Subjects,blank=True)
+    subject = models.CharField(max_length=1000,blank=True)
     year = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to=path_and_rename, verbose_name="Excel FIle", blank=True)
     
@@ -173,6 +173,10 @@ class Performance(models.Model):
     
     def __str__(self):
         return f"{self.roll} got SCGPA of {self.SCGPA} for {self.sem.name} semester"
+    
+    def save(self, *args, **kwargs):
+        self.SCGPA = round(self.SCGPA, 2)
+        super(Performance, self).save(*args, **kwargs)
     
     
     

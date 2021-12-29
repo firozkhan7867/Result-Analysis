@@ -1,8 +1,8 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render
-from numpy.core.function_base import add_newdoc
 from student.add_to_DB import split_data
 from student.back_log_handler import split_data_backlog
-
+from .analysis.sem_analysis import get_subject_analysis_data
 from student.preprocesssing import get_subj_list, get_subject_analysis, get_transformed_data
 from .models import BacklogData, Batch, Branch, Performance, Regulation, Semester, Student, Subjects
 import os
@@ -23,10 +23,14 @@ def index(request):
     #         d1 = di[0][title[-1]]
     #         print(d1[d1["Roll"] == "20135A0514"])
     #         print(title[-1])
-    # sem = Semester.objects.get(name="III")
+    sem = Semester.objects.all()
     # # subj = Subjects.objects.filter(name="DISCRETE MATHEMATICAL STRUCTURES")
     # get_subject_analysis(sem,"DISCRETE MATHEMATICAL STRUCTURES")
-    return render(request,"base.html") 
+    
+    context  = {
+        'sem':sem,
+    }
+    return render(request,"base.html",context) 
 
 def upload(request):
     sem = Semester.objects.all()
@@ -134,3 +138,9 @@ def data(request):
 
 
 
+
+def get_sem_analysis(request,sem_id):
+    if Semester.objects.filter(id=sem_id).exists():
+        sem = Semester.objects.get(id=sem_id)
+        return JsonResponse(get_subject_analysis_data(sem))
+        
