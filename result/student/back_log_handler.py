@@ -4,7 +4,6 @@ from student.preprocesssing import get_subj_list, get_transformed_data
 
 
 
-
 def add_student_performance(roll,sem):
     grade = {"O":10,"A+":9,"A":8,"B+":7,"B":6,"C":5,"F":0,"AB":0}
     if Student.objects.filter(roll=roll).exists():
@@ -13,8 +12,6 @@ def add_student_performance(roll,sem):
         subj = Subjects.objects.all().filter(roll=student,sem=sem)
         credit = [sub.credit for sub in subj]
         grade_val = [sub.grade for sub in subj]
-        
-        
         
         CP = []
         for i in range(len(credit)):
@@ -26,7 +23,6 @@ def add_student_performance(roll,sem):
         
         if sum(credit) > 0:
             SCGPA = TCP/sum(credit)
-       
         
         return [TCR, TCP,SCGPA ]
         
@@ -94,9 +90,6 @@ def add_attempt_details(subject,sem,data,student_roll,attendance_data,batch,cred
         update_subject(attmpt)
     
     
-    
-    
-    
 def add_attempt(data,subj_name,code,sem,roll):
     credit = list(map(float,data["Credit"]))
     batch = Batch.objects.get(id=sem.batch.id)
@@ -136,7 +129,6 @@ def split_data_backlog(data,sem_id):
     data = pd.read_excel(data)
     title = get_subj_list(data,6)
     di = get_transformed_data(data)
-    
     
     # compulsory add this line to add new students in the database
     # add_student(sem,di[1])
