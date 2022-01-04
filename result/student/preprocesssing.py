@@ -53,7 +53,15 @@ def get_subject_analysis(sem,subj):
 
 
 
-
+def get_section_list(students):
+    sect = {}
+    for stu in students:
+        if stu.section not in sect:
+            sect[stu.section] = 1
+        else:
+            sect[stu.section] +=1
+    
+    return sect
 
 
 

@@ -4,24 +4,40 @@ import { CChartBar } from '@coreui/react-chartjs'
 import "./featuredinfo.css"
 
 class Bargraph extends Component {
+
+    arr_key= () =>{
+      // console.log( typeof(this.props.back_data));
+      if (this.props.back_data){
+        const data = new Map(Object.entries(this.props.back_data));
+        return Array.from( data.keys() );
+      }
+      else{
+        return [1,1,1,1,1];
+      }
+    }
+
+    arry_val = () => {
+      if (this.props.back_data){
+      const data = new Map(Object.entries(this.props.back_data));
+      return Array.from( data.values() );
+    }
+      
+    else{
+      return [0,0,0,0,0];
+    }
+    }
+
     render() {
         return (
         <CCard className="h">
-          <CCardHeader>Bar Chart</CCardHeader>
+          <CCardHeader>Bar Chart  </CCardHeader>
           <CCardBody className='body'>
             <CChartBar
               data={{
-                labels: [
-                  '0 Backlogs',
-                  '1 Backlog',
-                  '2 Backlogs',
-                  '3 Backlogs',
-                  '5 Backlogs',
-                  '6 Backlogs',
-                ],
+                labels: this.arr_key(),
                 datasets: [
                   {
-                    data: [210, 20, 30, 10, 24],
+                    data: this.arry_val(),
                     backgroundColor: [
                       '#FF6384',
                       '#36A2EB',
@@ -38,7 +54,7 @@ class Bargraph extends Component {
                       '#E46651',
                       '#00D8FF',
                     ],
-                    data: [210, 20, 30, 10, 24],
+                    data: this.arry_val(),
                   },
                 ],
               }}

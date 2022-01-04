@@ -9,7 +9,7 @@ const Topbar = () => {
             <div className="topbarWrapper">
                 <div className="topLeft">
                     <span className="logo">
-                       Iamaadmin 
+                       Result Analysis 
                     </span>
                 </div>
                 <div className="topRight">

@@ -2,6 +2,7 @@ from .back_log_handler import add_backlog, add_student_performance
 from student.preprocesssing import get_subj_list, get_transformed_data
 from .models import BacklogSubject, Batch, Performance, Semester, Subjects,Student,Regulation, Branch
 import pandas as pd
+import numpy as np
 
 def extract_name(subj_name):
     names = subj_name.split("-")
@@ -129,8 +130,54 @@ def split_data(data,sem_id):
         else:
             add_performance_sem(di[0][i],di[1],sem)
 
-        
-            
+
+
+def add_or_update_student_details(data,branch,reg,batch):
+    names = list(data["name"])
+    rolls = list(data["roll"])
+    secs = list(data["sec"])
+    if Student.objects.filter(regulation=reg, branch=branch, batch=batch).exists():
+        for i in range(len(data)):
+            if Student.objects.filter(regulation=reg, branch=branch, batch=batch,roll=rolls[i]).exists():
+                # print(rolls[i])
+                if Student.objects.filter(regulation=reg, branch=branch, batch=batch,roll=rolls[i],section=10).exists():
+                    student = Student.objects.get(regulation=reg, branch=branch, batch=batch,roll=rolls[i],section=10)
+                    student.section = secs[i]
+                    if not pd.isna(names[i]):
+                        student.name = names[i]
+                    student.save()
+                else:
+                    pass
+            else:
+                name = names[i]
+                roll = rolls[i]
+                sec = secs[i]
+                student = Student(roll=roll,name=name,section=sec,regulation=reg, branch=branch, batch=batch)
+                student.save()
+    else:
+        for i in range(len(data)):
+            name = names[i]
+            roll = rolls[i]
+            sec = secs[i]
+            if not  Student.objects.filter(roll=roll).exists():
+                student = Student(roll=roll,section=sec,regulation=reg, branch=branch, batch=batch)
+                student.save()
+                if not pd.isna(names[i]):
+                    student.name = names[i]
+                student.save()
+
+
+# add student with section and name details
+def split_data_student(data, branch, reg, batch):
+    data = pd.read_excel(data)
+    # print(data)
+    data = data.iloc[:,1:]
+    print(data)
+    add_or_update_student_details(data,branch,reg,batch)
+    
+
+
+
             
     
     

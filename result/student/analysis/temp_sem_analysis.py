@@ -31,6 +31,7 @@ def subj_analysis_one_more(sem,batch,reg,branch,code,name):
     return {"fail":fail_count,"total_student":num_of_student,"passed_student":pass_count}
     
     
+    
 def cgpa_analysis_fun(cgpa):
     cgpa_analysis = {"O":0,"A+":0, "A":0, "B+":0, "B":0,"C":0}
     for i in range(len(cgpa)):
@@ -49,9 +50,10 @@ def cgpa_analysis_fun(cgpa):
             
     return cgpa_analysis
     
+    
 def get_sem_performance_analysis(sem):
     if Performance.objects.filter(sem=sem, regulation=sem.regulation,batch=sem.batch).exists():
-        pers = Performance.objects.all().filter(sem=sem, regulation=sem.regulation,batch=sem.batch)
+        pers = Performance.objects.all().filter(sem=sem, regulation=sem.regulation,batch=sem.batch, no_of_backlog=0)
         fail_count = 0
         pass_count = 0
         register_count = 0
@@ -61,20 +63,28 @@ def get_sem_performance_analysis(sem):
         for per in pers:
             if per.pass_or_fail == False:
                 fail_count +=1
+                print("inside back")
                 no_of_back.append(per.no_of_backlog)
             else:
                 pass_count +=1
             register_count +=1
             cgpa.append(per.SCGPA)
+        
+        
             
         back_data = {}
+        print(back_data)
                 
         for i in range(len(no_of_back)):
+            print(back_data)
+            print("inside back data")
             if no_of_back[i] in back_data:
+                print(back_data[no_of_back[i]])
                 back_data[no_of_back[i]] += 1
             else:
                 back_data[no_of_back[i]] = 1
         data = {}
+        
         data["CGPA"] = cgpa_analysis_fun(cgpa)
         data["Fail_count"] = fail_count
         data["Pass_count"] = pass_count
@@ -115,5 +125,11 @@ def get_subject_analysis_data(sem):
 
 
 
-# def section_analysis(sect,reg,batch,branch,sem,students):
-#     pass
+
+
+
+
+
+
+
+

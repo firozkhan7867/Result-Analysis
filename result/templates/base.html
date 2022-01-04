@@ -17,5 +17,12 @@
     {%  for s in sem %}
         <a href="{% url 'sem_data' s.id %}">{{s.id}} {{s.name}} {{s.batch}}</a> <br>
     {% endfor %}
+
+
+    <br>
+    <br><br><br><br><br><br><br><br><br><br>
+    {%  for s in sem %}
+        <a href="{% url 'student_data' s.id %}">{{s.id}} {{s.name}} {{s.batch}}</a> <br>
+    {% endfor %}
 </body>
 </html>

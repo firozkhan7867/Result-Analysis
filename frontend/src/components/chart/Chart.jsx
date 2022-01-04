@@ -8,7 +8,8 @@ export default function Chart({title,data,datakey,grid}) {
     return (
         <div className='chart' >
             <h3 className="chartTitle">
-                {title}
+                Semester Analytics
+                {/* {title} */}
             </h3>
             <ResponsiveContainer width="100%" aspect={4/1} >
                 <LineChart data={data} >

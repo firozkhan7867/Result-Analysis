@@ -1,53 +1,33 @@
 from django.db.models.fields import CharField
 from django.http.response import HttpResponse
 from student.add_to_DB import extract_name
+from .sem_analysis import cgpa_analysis_fun, title_and_code
 from student.models import *
 import pandas as pd
 import numpy as np
 
 
-def title_and_code(subj_list):
-    titles = []
-    code = []
-    for sub in subj_list:
-        d = extract_name(sub)
-        titles.append(d[1])
-        code.append(d[0])
-    return [code, titles]
 
 
-def subj_analysis_one_more(sem,batch,reg,branch,code,name):
+def subj_analysis_one_more_sec(sem,batch,reg,branch,code,name, sect):
+    stud = Student.objects.all().filter(batch=batch,regulation=reg,branch=branch,section=sect)
+    rolls = [roll.roll for roll in stud ]
     subs = Subjects.objects.all().filter(sem=sem,batch=batch,regulation=reg,branch=branch,code=code,name=name)
     fail_count = 0
     num_of_student = 0
     pass_count = 0
-    for sub in subs:
-        if sub.fail == True:
-            fail_count += 1
-        else:
-            pass_count +=1
+    for i in range(len(subs)):
+        sub = subs[i]
+        if sub.roll.roll in rolls:
+            if sub.fail == True:
+                fail_count += 1
+            else:
+                pass_count +=1
             
-        num_of_student +=1
+            num_of_student +=1
     return {"fail":fail_count,"total_student":num_of_student,"passed_student":pass_count}
     
-    
-def cgpa_analysis_fun(cgpa):
-    cgpa_analysis = {"O":0,"A+":0, "A":0, "B+":0, "B":0,"C":0}
-    for i in range(len(cgpa)):
-        if cgpa[i] > 9 :
-            cgpa_analysis["O"] +=1
-        elif cgpa[i] > 8:
-            cgpa_analysis["A+"] +=1
-        elif cgpa[i] > 7:
-            cgpa_analysis["A"] +=1
-        elif cgpa[i] > 6:
-            cgpa_analysis["B+"] +=1
-        elif cgpa[i] > 5:
-            cgpa_analysis["B"] +=1
-        elif cgpa[i] > 4:
-            cgpa_analysis["C"] +=1
-            
-    return cgpa_analysis
+
     
 def get_sem_performance_analysis(sem):
     if Performance.objects.filter(sem=sem, regulation=sem.regulation,batch=sem.batch).exists():
@@ -91,7 +71,7 @@ def get_sem_performance_analysis(sem):
         
         
         
-def get_subject_analysis_data(sem):
+def get_subject_analysis_data_sec(sem,sect):
     if Semester.objects.filter(id=sem.id).exists():
         sem = Semester.objects.get(id=sem.id)
         batch = sem.batch
@@ -106,14 +86,14 @@ def get_subject_analysis_data(sem):
         data = {}
         sem_data = {}
         for i in range(len(code)):
-            d = subj_analysis_one_more(sem,batch,reg,branch,code[i],title[i])
+            d = subj_analysis_one_more_sec(sem,batch,reg,branch,code[i],title[i],sect)
             data[code[i]] = {title[i]:d}
         sem_data["Subjects"] = data
-        per = get_sem_performance_analysis(sem)
-        sem_data["Semester PerFormance"] = per
+        # per = get_sem_performance_analysis(sem)
+        # sem_data["Semester PerFormance"] = per
     return sem_data
 
 
 
-# def section_analysis(sect,reg,batch,branch,sem,students):
-#     pass
+def section_analysis(sect,reg,batch,branch,sem,students):
+    return get_subject_analysis_data_sec(sem,sect)
